@@ -18,7 +18,8 @@ class Nginx < Formula
 
   def options
     [
-      ['--with-passenger', "Compile with support for Phusion Passenger module"]
+      ['--with-passenger', "Compile with support for Phusion Passenger module"],
+      ['--with-nhpm', "Compile with support for NGiNX HTTP Push Module"]
     ]
   end
 
@@ -41,8 +42,18 @@ class Nginx < Formula
             "--lock-path=#{var}/nginx/nginx.lock"]
     args << passenger_config_args if ARGV.include? '--with-passenger'
 
+    if ARGV.include? '--with-nhpm'
+      clone_dir = lib + 'nginx_http_push_module'
+      system "git clone https://github.com/slact/nginx_http_push_module.git #{clone_dir}"
+      args << "--add-module=#{clone_dir}"
+    end
+
     system "./configure", *args
     system "make install"
+
+    if ARGV.include? '--with-nhpm'
+      system "rm -rf #{clone_dir}"
+    end
 
     (prefix+'org.nginx.plist').write startup_plist
   end
